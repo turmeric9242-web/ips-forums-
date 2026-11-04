@@ -126,7 +126,7 @@
       posts = Array.isArray(data.posts) ? data.posts : []; render();
     } catch (e) {
       list.replaceChildren(); const p = document.createElement('p'); p.className = 'empty-state';
-      p.textContent = e.message.includes('Blob') ? 'The forum storage is not connected yet. The site owner must connect a Vercel Blob store.' : 'Could not load the shared forum. Please refresh and try again.';
+      p.textContent = 'Community posts could not be loaded right now. Please refresh and try again.';
       list.append(p);
     }
   }
