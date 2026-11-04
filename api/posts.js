@@ -13,6 +13,13 @@ export default async function handler(req, res) {
     if (method === 'GET') {
       let cursor;
       const records = [];
+      const imageBlobs = [];
+      let imageCursor;
+      do {
+        const imagePage = await list({ prefix: 'forum/images/', cursor: imageCursor, limit: 1000, token: process.env.BLOB_READ_WRITE_TOKEN });
+        imageBlobs.push(...imagePage.blobs);
+        imageCursor = imagePage.hasMore ? imagePage.cursor : undefined;
+      } while (imageCursor);
       do {
         const page = await list({ prefix: 'forum/posts/', cursor, limit: 1000, token: process.env.BLOB_READ_WRITE_TOKEN });
         for (const blob of page.blobs) {
@@ -20,11 +27,13 @@ export default async function handler(req, res) {
             const response = await fetch(blob.url, { cache: 'no-store' });
             if (response.ok) {
               const post = await response.json();
-              if (post.imageUrl && post.id) {
-                try {
-                  const imagePage = await list({ prefix: 'forum/images/' + post.id + '.webp', limit: 1, token: process.env.BLOB_READ_WRITE_TOKEN });
-                  post.imageUrl = imagePage.blobs[0]?.url || '';
-                } catch { post.imageUrl = ''; }
+              if (post.id) {
+                const matchingImage = imageBlobs.find(image =>
+                  image.pathname?.includes(post.id) || image.url?.includes(post.id)
+                );
+                // Prefer the live URL returned by Blob. Keep the URL already saved
+                // in the post as a fallback for older uploads with different names.
+                if (matchingImage) post.imageUrl = matchingImage.url;
               }
               records.push(post);
             }
