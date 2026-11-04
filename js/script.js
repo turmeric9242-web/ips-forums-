@@ -94,9 +94,11 @@
     event.preventDefault();
     const payload = {author:author.value.trim(),title:$('postTitle').value.trim(),body:$('postBody').value.trim(),website:trap.value};
     if (!payload.author || !payload.title || !payload.body) { msg.textContent = 'Please complete your name, title and message.'; return; }
-    submit.disabled = true; msg.textContent = 'Publishing to the shared forum…';
+    const password = prompt('Admin password required to publish:');
+    if (!password) { msg.textContent = 'Publishing cancelled. Admin access is required.'; return; }
+    submit.disabled = true; msg.textContent = 'Verifying admin access…';
     try {
-      const response = await fetch('/api/posts', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+      const response = await fetch('/api/posts', {method:'POST',headers:{'Content-Type':'application/json','x-forum-admin-password':password},body:JSON.stringify(payload)});
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Could not publish');
       form.reset(); msg.textContent = 'Published. Everyone can now see your post.';
