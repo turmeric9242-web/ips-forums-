@@ -25,6 +25,50 @@
   author.id = 'postAuthor'; author.maxLength = 40; author.required = true;
   author.placeholder = 'Name shown with your post'; author.autocomplete = 'nickname';
   authorLabel.append(author); form.insertBefore(authorLabel, form.firstChild);
+  const photoLabel = document.createElement('label');
+  photoLabel.className = 'photo-picker';
+  photoLabel.textContent = 'Add a photo (optional)';
+  const photo = document.createElement('input');
+  photo.type = 'file'; photo.accept = 'image/jpeg,image/png,image/webp'; photo.id = 'postPhoto';
+  photoLabel.append(photo);
+  const photoHint = document.createElement('small');
+  photoHint.className = 'photo-hint'; photoHint.textContent = 'Photos are resized and compressed to WebP before upload (max 1.5 MB).';
+  photoLabel.append(photoHint);
+  const preview = document.createElement('img');
+  preview.className = 'photo-preview'; preview.alt = 'Selected photo preview'; preview.hidden = true;
+  photoLabel.append(preview);
+  form.insertBefore(photoLabel, form.querySelector('.form-actions'));
+  let compressedImage = '';
+  photo.addEventListener('change', async () => {
+    compressedImage = ''; preview.hidden = true; preview.removeAttribute('src');
+    const file = photo.files && photo.files[0];
+    if (!file) return;
+    if (!['image/jpeg','image/png','image/webp'].includes(file.type)) { msg.textContent = 'Choose a JPG, PNG or WebP image.'; photo.value = ''; return; }
+    if (file.size > 12 * 1024 * 1024) { msg.textContent = 'Choose an image smaller than 12 MB.'; photo.value = ''; return; }
+    try {
+      const bitmap = await createImageBitmap(file);
+      const scale = Math.min(1, 1600 / Math.max(bitmap.width, bitmap.height));
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+      canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+      canvas.getContext('2d').drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+      bitmap.close();
+      let quality = 0.82, blob;
+      do {
+        blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/webp', quality));
+        quality -= 0.08;
+      } while (blob && blob.size > 1500000 && quality >= 0.5);
+      if (!blob || blob.size > 1500000) throw new Error('This photo could not be compressed below 1.5 MB. Choose another.');
+      compressedImage = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+      preview.src = compressedImage; preview.hidden = false;
+      msg.textContent = 'Photo ready · compressed WebP';
+    } catch (error) { msg.textContent = error.message || 'Could not process this photo.'; photo.value = ''; }
+  });
   const trap = document.createElement('input');
   trap.type = 'text'; trap.name = 'website'; trap.tabIndex = -1; trap.autocomplete = 'off';
   trap.setAttribute('aria-hidden', 'true'); trap.style.cssText = 'position:absolute;left:-10000px;width:1px;height:1px';
@@ -58,6 +102,7 @@
       const title = document.createElement('h3'); title.textContent = post.title;
       const body = document.createElement('p'); body.textContent = post.body;
       card.append(meta,title,body);
+      if (post.imageUrl) { const image = document.createElement('img'); image.className = 'post-image'; image.src = post.imageUrl; image.alt = 'Photo shared with this community post'; image.loading = 'lazy'; card.append(image); }
       const remove = document.createElement('button'); remove.type = 'button'; remove.className = 'post-delete'; remove.textContent = 'Delete (admin)';
       remove.addEventListener('click', async () => {
         const password = prompt('Enter the forum admin password to delete this post:');
@@ -92,7 +137,7 @@
   });
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
-    const payload = {author:author.value.trim(),title:$('postTitle').value.trim(),body:$('postBody').value.trim(),website:trap.value};
+    const payload = {author:author.value.trim(),title:$('postTitle').value.trim(),body:$('postBody').value.trim(),website:trap.value,image:compressedImage};
     if (!payload.author || !payload.title || !payload.body) { msg.textContent = 'Please complete your name, title and message.'; return; }
     const password = prompt('Admin password required to publish:');
     if (!password) { msg.textContent = 'Publishing cancelled. Admin access is required.'; return; }
@@ -101,7 +146,7 @@
       const response = await fetch('/api/posts', {method:'POST',headers:{'Content-Type':'application/json','x-forum-admin-password':password},body:JSON.stringify(payload)});
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Could not publish');
-      form.reset(); msg.textContent = 'Published. Everyone can now see your post.';
+      form.reset(); compressedImage = ''; preview.hidden = true; preview.removeAttribute('src'); msg.textContent = 'Published. Everyone can now see your post.';
       await load();
     } catch (e) { msg.textContent = e.message; }
     finally { submit.disabled = false; }
