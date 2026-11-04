@@ -108,3 +108,8 @@
   load();
   setInterval(load, 30000);
 })();
+document.querySelectorAll('p').forEach(p => {
+  if (p.textContent.includes('locally saved community notes')) p.textContent = 'An independent Howrah community guide to publicly listed campus references, official school links and shared community discussions.';
+  if (p.textContent.includes('Posts are saved only in this browser')) p.textContent = 'Posts are stored on Vercel and shared with everyone who visits this site.';
+});
+document.querySelectorAll('.storage-note').forEach(p => p.textContent = 'SHARED SERVER STORAGE · Vercel Blob · Posts are visible to all visitors');
