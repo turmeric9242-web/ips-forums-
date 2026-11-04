@@ -36,7 +36,7 @@ export default async function handler(req, res) {
       const postsWithPhotos = records.filter(post => post.imageUrl);
       for (const post of postsWithPhotos) {
         let savedPath = '';
-        try { savedPath = new URL(post.imageUrl).pathname.replace(/^\\//, ''); } catch {}
+        try { const path = new URL(post.imageUrl).pathname; savedPath = path.startsWith('/') ? path.slice(1) : path; } catch {}
         const match = imageBlobs.find(image =>
           image.pathname === 'forum/images/' + post.id + '.webp' ||
           image.pathname === savedPath ||
@@ -71,7 +71,9 @@ export default async function handler(req, res) {
       const postId = randomUUID();
       let imageUrl = '';
       if (body.image) {
-        const match = typeof body.image === 'string' && body.image.match(/^data:image\\/webp;base64,([A-Za-z0-9+/=]+)$/);
+        const prefix = 'data:image/webp;base64,';
+        const encoded = typeof body.image === 'string' && body.image.startsWith(prefix) ? body.image.slice(prefix.length) : '';
+        const match = encoded && /^[A-Za-z0-9+/=]+$/.test(encoded) ? [body.image, encoded] : null;
         if (!match) return res.status(400).json({ error: 'Image must be compressed to WebP before upload.' });
         const imageBuffer = Buffer.from(match[1], 'base64');
         if (imageBuffer.length > 1500000 || imageBuffer.length < 16 ||
