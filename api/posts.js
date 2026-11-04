@@ -27,6 +27,9 @@ export default async function handler(req, res) {
       return res.status(200).json({ posts: records.slice(0, 200) });
     }
     if (method === 'POST') {
+      const expected = process.env.FORUM_ADMIN_PASSWORD;
+      const supplied = req.headers['x-forum-admin-password'];
+      if (!expected || typeof supplied !== 'string' || supplied !== expected) return res.status(401).json({ error: 'Admin password is incorrect. Only admins can publish posts.' });
       const body = typeof req.body === 'object' && req.body ? req.body : {};
       if (clean(body.website, 200)) return res.status(201).json({ ok: true }); // honeypot
       const author = clean(body.author, 40);
