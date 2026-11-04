@@ -1,7 +1,7 @@
 (() => {
   const link=document.createElement('link');link.rel='stylesheet';link.href='/css/forum.css';document.head.append(link);
-  document.querySelectorAll('#community .community-head p').forEach(p=>p.textContent='A shared community space. Posts published here are stored on Vercel and visible to everyone who visits this site.');
-  document.querySelectorAll('#directory-guide p').forEach(p=>{if(p.textContent.includes('Community notes are created locally'))p.textContent='Community posts are stored in shared Vercel storage and are visible to all visitors. Do not post private student information, sensitive personal details, or urgent notices.';});
+  document.querySelectorAll('#community .community-head p').forEach(p=>p.textContent='A shared community space for notes, updates and photos. Everyone can read; admins manage publishing.');
+  document.querySelectorAll('#directory-guide p').forEach(p=>{if(p.textContent.includes('Community notes are created locally'))p.textContent='Community posts are shared with all visitors. Do not post private student information, sensitive personal details, or urgent notices.';});
 })();
 (() => {
   const $ = (id) => document.getElementById(id);
@@ -74,7 +74,7 @@
   trap.setAttribute('aria-hidden', 'true'); trap.style.cssText = 'position:absolute;left:-10000px;width:1px;height:1px';
   form.append(trap);
   const info = document.createElement('p'); info.className = 'storage-note';
-  info.textContent = 'SHARED COMMUNITY POSTS · Stored on Vercel Blob · Visible to all visitors';
+  info.textContent = 'COMMUNITY POSTS · NOTES · UPDATES · PHOTOS';
   const community = document.querySelector('#community');
   const toolbar = document.querySelector('.forum-toolbar');
   if (toolbar && community) toolbar.after(info);
@@ -132,7 +132,7 @@
   }
   toggle?.addEventListener('click', () => {
     const opening = form.classList.contains('hidden'); form.classList.toggle('hidden', !opening);
-    $('adminBtnText').textContent = opening ? 'Close editor' : 'Create an update';
+    $('adminBtnText').textContent = opening ? 'Close editor' : 'Create a post';
     if (opening) author.focus();
   });
   form.addEventListener('submit', async (event) => {
@@ -157,6 +157,6 @@
 })();
 document.querySelectorAll('p').forEach(p => {
   if (p.textContent.includes('locally saved community notes')) p.textContent = 'An independent Howrah community guide to publicly listed campus references, official school links and shared community discussions.';
-  if (p.textContent.includes('Posts are saved only in this browser')) p.textContent = 'Posts are stored on Vercel and shared with everyone who visits this site.';
+  if (p.textContent.includes('Posts are saved only in this browser')) p.textContent = 'Posts are shared with everyone who visits this site.';
 });
-document.querySelectorAll('.storage-note').forEach(p => p.textContent = 'SHARED SERVER STORAGE · Vercel Blob · Posts are visible to all visitors');
+
