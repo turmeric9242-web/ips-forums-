@@ -1,0 +1,10 @@
+{
+  "name": "Ideal Public School Community",
+  "short_name": "IPS Community",
+  "description": "Independent community guide to publicly listed campus information and community notes.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f7f8fa",
+  "theme_color": "#071d3c",
+  "icons": [{"src": "/assets/ips-logo.jpg", "sizes": "1024x1024", "type": "image/jpeg", "purpose": "any"}]
+}
