@@ -1,0 +1,17 @@
+# Ideal Public School Community
+
+> An independent, unofficial community project sharing publicly available campus references and community notes related to Ideal Public School in Howrah, West Bengal.
+
+## Important identity and source note
+- This project is not affiliated with, authorized by, operated by, or endorsed by Ideal Public School.
+- The official school website is https://www.idealpublicschools.com/ and is the authoritative source for admissions, fees, policies, schedules and official announcements.
+- Campus addresses and phone numbers on this site are public references and should be verified with the school before use. They are not the address of this independent project.
+- Community notes are stored only in the visitor's own browser and are not shared or synchronized.
+
+## Main page
+- https://ideal-public-school-community.vercel.app/
+
+## Topics
+- Public campus references: Kulgachia, Shyampur and Amta, Howrah, West Bengal.
+- Links to official school information.
+- Independent, local-only community notes.
