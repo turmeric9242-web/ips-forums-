@@ -25,6 +25,55 @@ export default async function handler(req, res) {
         for (const blob of page.blobs) {
           try {
             const response = await fetch(blob.url, { cache: 'no-store' });
+            if (response.ok) records.push(await response.json());
+          } catch {}
+        }
+        cursor = page.hasMore ? page.cursor : undefined;
+      } while (cursor);
+
+      // Resolve legacy image URLs against the live Blob listing.
+      const postsWithPhotos = records.filter(post => post.imageUrl);
+      for (const post of postsWithPhotos) {
+        let savedPath = '';
+        try { savedPath = new URL(post.imageUrl).pathname.replace(/^\\//, ''); } catch {}
+        const matchingImage = imageBlobs.find(image =>
+          image.pathname === 'forum/images/' + post.id + '.webp' ||
+          image.pathname === savedPath ||
+          image.pathname?.includes(post.id) ||
+          image.url?.includes(post.id)
+        );
+        if (matchingImage) post.imageUrl = matchingImage.url;
+      }
+      if (imageBlobs.length === 1 && postsWithPhotos.length === 1) {
+        postsWithPhotos[0].imageUrl = imageBlobs[0].url;
+      }
+} from '@vercel/blob';
+import { randomUUID } from 'node:crypto';
+
+const json = (data, status = 200) => new Response(JSON.stringify(data), {
+  status, headers: { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' }
+});
+const clean = (value, max) => typeof value === 'string' ? value.trim().slice(0, max) : '';
+
+export default async function handler(req, res) {
+  const method = req.method || 'GET';
+  try {
+    if (!process.env.BLOB_READ_WRITE_TOKEN) return res.status(503).json({ error: 'Vercel Blob is not connected yet. Connect a Blob store to this project.' });
+    if (method === 'GET') {
+      let cursor;
+      const records = [];
+      const imageBlobs = [];
+      let imageCursor;
+      do {
+        const imagePage = await list({ prefix: 'forum/images/', cursor: imageCursor, limit: 1000, token: process.env.BLOB_READ_WRITE_TOKEN });
+        imageBlobs.push(...imagePage.blobs);
+        imageCursor = imagePage.hasMore ? imagePage.cursor : undefined;
+      } while (imageCursor);
+      do {
+        const page = await list({ prefix: 'forum/posts/', cursor, limit: 1000, token: process.env.BLOB_READ_WRITE_TOKEN });
+        for (const blob of page.blobs) {
+          try {
+            const response = await fetch(blob.url, { cache: 'no-store' });
             if (response.ok) {
               const post = await response.json();
               if (post.id) {
