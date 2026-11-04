@@ -102,7 +102,7 @@
       const title = document.createElement('h3'); title.textContent = post.title;
       const body = document.createElement('p'); body.textContent = post.body;
       card.append(meta,title,body);
-      if (post.imageUrl) { const image = document.createElement('img'); image.className = 'post-image'; image.src = post.imageUrl; image.alt = 'Photo shared with this community post'; image.loading = 'lazy'; card.append(image); }
+      if (post.imageUrl) { const image = document.createElement('img'); image.className = 'post-image'; image.src = post.imageUrl; image.alt = 'Photo shared with this community post'; image.loading = 'lazy'; image.addEventListener('error', () => { image.remove(); const note = document.createElement('p'); note.className = 'image-unavailable'; note.textContent = 'This photo is no longer available.'; card.append(note); }, { once: true }); card.append(image); }
       const remove = document.createElement('button'); remove.type = 'button'; remove.className = 'post-delete'; remove.textContent = 'Delete (admin)';
       remove.addEventListener('click', async () => {
         const password = prompt('Enter the forum admin password to delete this post:');
