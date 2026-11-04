@@ -14,7 +14,7 @@ export default async function handler(req, res) {
       let cursor;
       const records = [];
       do {
-        const page = await list({ prefix: 'forum/posts/', cursor, limit: 1000 });
+        const page = await list({ prefix: 'forum/posts/', cursor, limit: 1000, token: process.env.BLOB_READ_WRITE_TOKEN });
         for (const blob of page.blobs) {
           try {
             const response = await fetch(blob.url, { cache: 'no-store' });
@@ -65,10 +65,10 @@ export default async function handler(req, res) {
       if (!expected || typeof supplied !== 'string' || supplied !== expected) return res.status(401).json({ error: 'Admin password is incorrect.' });
       const id = clean(req.body?.id, 80);
       if (!/^[0-9a-f-]{36}$/i.test(id)) return res.status(400).json({ error: 'Invalid post ID.' });
-      const page = await list({ prefix: 'forum/posts/' + id + '.json', limit: 1 });
+      const page = await list({ prefix: 'forum/posts/' + id + '.json', limit: 1, token: process.env.BLOB_READ_WRITE_TOKEN });
       if (!page.blobs.length) return res.status(404).json({ error: 'Post not found.' });
       await del(page.blobs[0].url, { token: process.env.BLOB_READ_WRITE_TOKEN });
-      const imagePage = await list({ prefix: 'forum/images/' + id + '.webp', limit: 1 });
+      const imagePage = await list({ prefix: 'forum/images/' + id + '.webp', limit: 1, token: process.env.BLOB_READ_WRITE_TOKEN });
       if (imagePage.blobs.length) await del(imagePage.blobs[0].url, { token: process.env.BLOB_READ_WRITE_TOKEN });
       return res.status(200).json({ ok: true });
     }
