@@ -37,7 +37,22 @@ export default async function handler(req, res) {
       const message = clean(body.body, 2000);
       if (!author || !title || !message) return res.status(400).json({ error: 'Name, title and message are required.' });
       if (author.length < 2 || title.length < 4 || message.length < 8) return res.status(400).json({ error: 'Please add a little more detail.' });
-      const post = { id: randomUUID(), author, title, body: message, createdAt: new Date().toISOString() };
+      const postId = randomUUID();
+      let imageUrl = '';
+      if (body.image) {
+        const match = typeof body.image === 'string' && body.image.match(/^data:image\/webp;base64,([A-Za-z0-9+/=]+)$/);
+        if (!match) return res.status(400).json({ error: 'Image must be compressed to WebP before upload.' });
+        const imageBuffer = Buffer.from(match[1], 'base64');
+        if (imageBuffer.length > 1500000 || imageBuffer.length < 16 || imageBuffer.subarray(0, 4).toString() !== 'RIFF' || imageBuffer.subarray(8, 12).toString() !== 'WEBP') {
+          return res.status(400).json({ error: 'WebP image is invalid or larger than 1.5 MB.' });
+        }
+        const imageBlob = await put('forum/images/' + postId + '.webp', imageBuffer, {
+          access: 'public', addRandomSuffix: false, contentType: 'image/webp',
+          token: process.env.BLOB_READ_WRITE_TOKEN
+        });
+        imageUrl = imageBlob.url;
+      }
+      const post = { id: postId, author, title, body: message, imageUrl, createdAt: new Date().toISOString() };
       await put('forum/posts/' + post.id + '.json', JSON.stringify(post), {
         access: 'public', addRandomSuffix: false, contentType: 'application/json',
         token: process.env.BLOB_READ_WRITE_TOKEN
@@ -53,6 +68,8 @@ export default async function handler(req, res) {
       const page = await list({ prefix: 'forum/posts/' + id + '.json', limit: 1 });
       if (!page.blobs.length) return res.status(404).json({ error: 'Post not found.' });
       await del(page.blobs[0].url, { token: process.env.BLOB_READ_WRITE_TOKEN });
+      const imagePage = await list({ prefix: 'forum/images/' + id + '.webp', limit: 1 });
+      if (imagePage.blobs.length) await del(imagePage.blobs[0].url, { token: process.env.BLOB_READ_WRITE_TOKEN });
       return res.status(200).json({ ok: true });
     }
     res.setHeader('Allow', 'GET, POST, DELETE');
