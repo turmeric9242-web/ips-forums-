@@ -1,4 +1,9 @@
 (() => {
+  const link=document.createElement('link');link.rel='stylesheet';link.href='/css/forum.css';document.head.append(link);
+  document.querySelectorAll('#community .community-head p').forEach(p=>p.textContent='A shared community space. Posts published here are stored on Vercel and visible to everyone who visits this site.');
+  document.querySelectorAll('#directory-guide p').forEach(p=>{if(p.textContent.includes('Community notes are created locally'))p.textContent='Community posts are stored in shared Vercel storage and are visible to all visitors. Do not post private student information, sensitive personal details, or urgent notices.';});
+})();
+(() => {
   const $ = (id) => document.getElementById(id);
   const menu = $('primary-nav'), menuButton = document.querySelector('.menu-toggle');
   if (menuButton && menu) {
