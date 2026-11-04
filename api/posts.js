@@ -18,7 +18,16 @@ export default async function handler(req, res) {
         for (const blob of page.blobs) {
           try {
             const response = await fetch(blob.url, { cache: 'no-store' });
-            if (response.ok) records.push(await response.json());
+            if (response.ok) {
+              const post = await response.json();
+              if (post.imageUrl && post.id) {
+                try {
+                  const imagePage = await list({ prefix: 'forum/images/' + post.id + '.webp', limit: 1, token: process.env.BLOB_READ_WRITE_TOKEN });
+                  post.imageUrl = imagePage.blobs[0]?.url || '';
+                } catch { post.imageUrl = ''; }
+              }
+              records.push(post);
+            }
           } catch {}
         }
         cursor = page.hasMore ? page.cursor : undefined;
