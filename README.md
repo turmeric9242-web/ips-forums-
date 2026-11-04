@@ -1,29 +1,39 @@
-# Ideal Public School Community
+# Ideal Public School Community Forum
 
-An Apple-inspired, responsive, static community guide. This is an **independent, unofficial project** and is not affiliated with, authorized by, operated by, or endorsed by Ideal Public School.
+Independent, unofficial community project. Not affiliated with, authorized by, operated by, or endorsed by Ideal Public School.
 
-## Stack and data
-- Plain HTML, CSS and JavaScript; no framework build step.
-- No external database, backend, analytics SDK or account system.
-- Community notes use browser `localStorage` and remain on the same browser/device only.
-- External Google Fonts are used for typography; all site application assets are local.
+## Stack
+- Static HTML/CSS/JavaScript frontend.
+- Vercel Functions endpoint at `/api/posts`.
+- Vercel Blob for shared post storage.
+- No Supabase, Firebase, third-party database, or external API provider.
 
-## Run locally
-Open `index.html` or run `python -m http.server 8000` and visit `http://localhost:8000`.
+## One-time Vercel setup
+1. Open the Vercel project connected to this repository.
+2. Storage → Create Database / Blob → Create Blob Store (public access).
+3. Connect the Blob store to this project and Production (and Preview if needed). Vercel injects `BLOB_READ_WRITE_TOKEN`.
+4. Project → Settings → Environment Variables: add `FORUM_ADMIN_PASSWORD` with a strong unique password. Apply to Production and Preview.
+5. Redeploy after connecting storage and setting the environment variable.
 
-## SEO implementation
-- Self-referencing canonical, descriptive title and meta description.
-- Open Graph and Twitter metadata with image alt text.
-- JSON-LD graph for the independent publisher, website and page. Public campus addresses are represented as mentioned Place references, not as the community project's own address.
-- `robots.txt`, XML sitemap, and `llms.txt`.
-- Vercel security headers, semantic HTML, mobile viewport, reduced-motion support and crawlable HTML content.
-- No fake ratings, reviews, FAQ rich-result markup, or unsupported claims of official affiliation.
+## Forum behavior
+- Anyone can read shared posts.
+- Visitors can publish a display name, title and message.
+- Posts are saved as individual JSON blobs and read by the API for all visitors.
+- Admin deletion requires `FORUM_ADMIN_PASSWORD`; the password is entered only when deleting and is never stored in frontend code.
+- The frontend refreshes the post list every 30 seconds.
 
-## Address and identity policy
-The project has no asserted physical office address. The Kulgachia, Shyampur and Amta locations are campus references published by the school, not the project's registered address or headquarters.
+## Important limitations
+- Blob is object storage, not a relational database. This lightweight forum is suitable for a small community, not a high-traffic social network.
+- Public posting can attract spam. Add Vercel Firewall rate-limit rules and monitor Blob usage before opening widely. The honeypot is only basic bot friction, not strong abuse prevention.
+- There is no user account system, edit feature, comments, or guaranteed realtime push; visitors see updates on refresh / polling.
+- The first request will show a storage setup message until the Blob store is connected.
+- Configure a strong admin password before production use.
+
+## Local development
+Install dependencies with `npm install`, then run `vercel dev` after linking the project and pulling environment variables. Opening the HTML file directly will not run the API.
 
 ## Before launch
-1. Verify campus addresses, phone numbers and official links against the school's current pages.
-2. Replace the default Vercel hostname in canonical, Open Graph, Twitter, JSON-LD, sitemap and `llms.txt` if a custom domain is configured.
-3. Test the live sitemap and robots file, then add the verified domain to Google Search Console and submit the sitemap.
-4. Run Lighthouse / PageSpeed and Google's Rich Results Test after deployment. Search rankings cannot be guaranteed.
+- Replace the example canonical domain with the real deployed domain.
+- Add the school's crest to `assets/ips-logo.jpg` (the image asset is not yet committed).
+- Verify school contact details and public campus references.
+- Keep the independent-project disclaimer visible.
